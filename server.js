@@ -7,7 +7,7 @@ const app = express();
 app.use(cors());
 
 // Replace with the target site you want to proxy
-const target = "https://castles.cc";
+const target = "https://innersloth.itch.io/among-us";
 
 app.use(
   "/",
