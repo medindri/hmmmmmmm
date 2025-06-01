@@ -7,7 +7,7 @@ const app = express();
 app.use(cors());
 
 // Replace with the target site you want to proxy
-const target = "https://example.com";
+const target = "https://castles.cc";
 
 app.use(
   "/",
