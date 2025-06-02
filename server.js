@@ -1,57 +1,29 @@
 const express = require("express");
-const cors = require("cors");
 const got = require("got");
-const cheerio = require("cheerio");
+const cors = require("cors");
 
 const app = express();
 app.use(cors());
 
-const TARGET = "https://kingdomofloathing.com"; // CHANGE THIS
+const TARGET = "https://www.kingdomofloathing.com";
 
 app.get("*", async (req, res) => {
   try {
-    const url = `${TARGET}${req.originalUrl}`;
+    const path = req.originalUrl;
+    const url = `${TARGET}${path}`;
+
     const response = await got(url, {
       followRedirect: true,
+      responseType: "buffer",
       headers: {
-        "user-agent": req.headers["user-agent"] || "",
+        "User-Agent": req.headers["user-agent"] || "",
       },
     });
 
-    let contentType = response.headers["content-type"] || "";
-    if (contentType.includes("text/html")) {
-      const $ = cheerio.load(response.body);
-
-      // Remove JS-based redirects
-      $('script').each((i, el) => {
-        const content = $(el).html();
-        if (content && content.includes("window.location")) {
-          $(el).remove();
-        }
-      });
-
-      // Rewrite <a href="..."> links to go through your proxy
-      $("a").each((i, el) => {
-        let href = $(el).attr("href");
-        if (href && href.startsWith("/")) {
-          $(el).attr("href", href);
-        } else if (href && href.startsWith("http")) {
-          if (href.startsWith(TARGET)) {
-            $(el).attr("href", href.replace(TARGET, ""));
-          } else {
-            $(el).attr("target", "_blank"); // external links
-          }
-        }
-      });
-
-      res.set("Content-Type", "text/html");
-      res.send($.html());
-    } else {
-      res.set("Content-Type", contentType);
-      res.send(response.rawBody);
-    }
-  } catch (err) {
-    console.error(err.message);
+    res.set("Content-Type", response.headers["content-type"] || "text/html");
+    res.status(200).send(response.body);
+  } catch (error) {
+    console.error("Proxy error:", error.message);
     res.status(500).send("Proxy error.");
   }
 });
